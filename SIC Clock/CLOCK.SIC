@@ -1,0 +1,161 @@
+#####################################################################
+# My code uses 363 Bytes and get the time from memory address 7FFD
+# Right above First symbol name everyting I am using is been define
+######################################################################
+CLOCK	START	7E95
+MAX	WORD	8388608
+ZERO	WORD	0
+ONE	WORD	1
+TWL	WORD	12
+TEN	WORD	10
+HOUR	WORD	3600
+MINT	WORD	60
+ASCII	WORD	48
+AM	WORD	65
+PM	WORD	80
+TEMPI	RESW	1
+TEMPII	RESW	1
+TMPIII	RESW	1
+TEMPIV	RESW	1
+TEMPV	RESW	1
+TIMER	RESW	1
+DEVICE	WORD	64
+####################################################
+# Getting the time and zeroing out varabile
+# also checking if it is for 12 or 24 hour formate
+####################################################
+FIRST	LDA	ZERO
+	STA	TMPIII
+	STA	TEMPIV
+	STA	TEMPV
+	LDA	TIM
+	STA	TIMER
+	COMP	ZERO
+	JGT	TTLVE
+	JEQ	TTLVE
+####################################################
+# this is take out 8 from the fornt and get the time
+####################################################
+TFOUR	LDA	ZERO
+	STA	TEMPI
+	LDA	TIMER
+	SUB	MAX
+	STA	TIMER
+	J	HTFLPO	
+####################################################
+# this is for 12 hours calculation and start with AM
+####################################################
+TTLVE	LDA	AM
+	STA	TEMPV
+	LDA	ZERO
+	STA	TEMPI
+	LDA	TIMER
+########################################################
+# Doing Hours calculation here and its same for 12 or 24
+########################################################
+HTFLPO	COMP	HOUR
+	JLT	MINUC
+	LDA	TIMER
+	DIV	HOUR
+	STA	TMPIII
+	LDA	TEMPV
+	COMP	ZERO
+	JEQ	MINUC
+	LDA	TMPIII
+	COMP	TWL
+	JEQ	CHNG
+	JGT	CHNG
+	JLT	MINUC
+########################################################################
+# If it is in 12 hour fomate then if time is 12 or more it changes to pm
+########################################################################
+CHNG	LDA	PM
+	STA	TEMPV
+##############################################################
+# I do minute calculation here and i use this for 12 or 24
+##############################################################
+MINUC	LDA	TMPIII
+	MUL	HOUR
+	STA	TEMPIV
+	LDA	TIMER
+	SUB	TEMPIV
+	STA	TEMPIV
+	DIV	MINT
+	STA	TEMPIV
+	LDA	TEMPV
+	COMP	ZERO
+	JEQ	HCA
+	LDA	TMPIII
+	COMP	ZERO
+	JGT	HCA
+	ADD	TWL
+	STA	TMPIII
+####################################################################################
+# If the time is in 12 hour formate and if the time is less than 3600 than i put 12 
+####################################################################################
+HCA	LDA	TEMPV
+	COMP	ZERO
+	JEQ	HPT
+	LDA	TMPIII
+	COMP	TWL
+	JEQ	HPT
+	JLT	HPT
+	SUB	TWL
+	STA	TMPIII
+##################################################################################################
+# Here i check is the time is 10 or more than i split them and put them temp1 and temp2 for print
+##################################################################################################
+HPT	LDA	TMPIII
+	COMP	TEN
+	JLT	ENDH
+	SUB	TEN
+	STA	TMPIII
+	LDA	TEMPI
+	ADD	ONE
+	STA	TEMPI
+	J	HPT
+##########################################################################
+# clear the temp3 to use in minute and convert her into decimal for hours
+##########################################################################
+ENDH	LDA	TEMPI
+	ADD	ASCII
+	STA	TEMPI
+	LDA	TMPIII
+	ADD	ASCII
+	STA	TEMPII
+	LDA	ZERO
+	STA	TMPIII
+	LDA	TEMPIV
+#########################################################################################################
+# if the minute is more then 10 minutes then i split them and put them into temp3 and temp4 for printing
+#########################################################################################################
+ENDM	COMP	TEN
+	JLT	DONE
+	SUB	TEN
+	STA	TEMPIV
+	LDA	TMPIII
+	ADD	ONE
+	STA	TMPIII
+	LDA	TEMPIV
+	J	ENDM
+#############################################
+# print everyting to device 64 here
+#############################################
+DONE	LDA	TEMPI
+	WD	DEVICE
+	LDA	TEMPII
+	WD	DEVICE
+	LDA	TMPIII
+	ADD	ASCII
+	WD	DEVICE
+	LDA	TEMPIV
+	ADD	ASCII
+	WD	DEVICE
+	LDA 	TEMPV
+	COMP	ZERO
+	JEQ	OUT
+	WD	DEVICE
+OUT	LDL	ZERO
+	RSUB
+TIM	RESW	1
+	END	FIRST
